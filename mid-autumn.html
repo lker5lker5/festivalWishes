@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05091a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>中秋快乐 · 阖家团圆</title>
+<style>
+    * {
+        margin: 0; padding: 0; box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+        width: 100%; height: 100%;
+        overflow: hidden;
+        position: fixed;
+        overscroll-behavior: none;
+    }
+    body {
+        font-family: "STKaiti", "KaiTi", "Microsoft YaHei", serif;
+        background:
+            radial-gradient(ellipse 65% 45% at 72% 18%, rgba(85,115,205,0.12), transparent 62%),
+            radial-gradient(ellipse 55% 38% at 22% 55%, rgba(125,95,185,0.08), transparent 62%),
+            radial-gradient(ellipse at 50% 20%, #1a2359 0%, #0c1445 50%, #05091a 100%);
+        background-attachment: fixed;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                 env(safe-area-inset-bottom) env(safe-area-inset-left);
+        touch-action: none;
+    }
+    #star-canvas {
+        position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 0; pointer-events: none;
+    }
+    .moon {
+        position: absolute;
+        top: max(4vh, env(safe-area-inset-top));
+        right: 8vw;
+        width: min(22vw, 100px);
+        height: min(22vw, 100px);
+        border-radius: 50%;
+        z-index: 1;
+        background: radial-gradient(circle at 33% 30%,
+            #fffdf4 0%, #fff8d0 20%, #ffed8e 46%, #f7d24f 74%, #d8a924 100%);
+        box-shadow:
+            inset -6px -6px 18px rgba(150, 105, 10, 0.30),
+            inset  5px  5px 14px rgba(255,255,232,0.60),
+            0 0 30px  rgba(255,230,100,0.65),
+            0 0 80px  rgba(255,215,0,0.32),
+            0 0 160px rgba(255,200,0,0.16);
+        filter: blur(0.3px);
+        will-change: transform;
+    }
+    .moon::after {
+        content: '';
+        position: absolute; inset: -38%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,232,140,0.24), rgba(255,220,120,0.08) 45%, transparent 70%);
+        animation: moonBreathe 5s ease-in-out infinite;
+        pointer-events: none;
+    }
+    @keyframes moonBreathe {
+        0%, 100% { opacity: 0.55; transform: scale(0.94); }
+        50%      { opacity: 1;    transform: scale(1.14); }
+    }
+
+    /* ==================== 顶部签名问候语 ==================== */
+    .greeting {
+        position: absolute;
+        top: calc(5vh + env(safe-area-inset-top));
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(8px, 1.6vw, 18px);
+        pointer-events: none;
+        white-space: nowrap;
+        max-width: 92vw;
+    }
+
+    /* 两侧渐隐金线 */
+    .greeting-line {
+        display: block;
+        width: clamp(16px, 5.5vw, 64px);
+        height: 1px;
+        background: linear-gradient(to right,
+            transparent,
+            rgba(212, 175, 55, 0.75) 50%,
+            transparent);
+        opacity: 0.75;
+        flex-shrink: 0;
+    }
+
+    /* 金字文本 */
+    .greeting-text {
+        font-family: "STKaiti", "KaiTi", "Microsoft YaHei", serif;
+        font-size: clamp(13px, 3vw, 24px);
+        font-weight: 600;
+        letter-spacing: clamp(1.5px, 0.35vw, 4px);
+        line-height: 1.2;
+        background: linear-gradient(180deg,
+            #fffbe0 0%,
+            #ffe89a 28%,
+            #ffd45a 55%,
+            #d4a02c 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        animation: greetingGlow 3.6s ease-in-out infinite;
+    }
+
+    /* 只做柔光强弱呼吸，不做缩放，保持优雅 */
+    @keyframes greetingGlow {
+        0%, 100% {
+            filter: drop-shadow(0 0 6px rgba(255, 215, 110, 0.42))
+                    drop-shadow(0 0 16px rgba(255, 180, 60, 0.20));
+        }
+        50% {
+            filter: drop-shadow(0 0 11px rgba(255, 222, 132, 0.78))
+                    drop-shadow(0 0 26px rgba(255, 190, 80, 0.42));
+        }
+    }
+
+    .cloud {
+        position: absolute; left: 100%;
+        pointer-events: none; z-index: 2;
+        filter: blur(12px);
+        background:
+            radial-gradient(ellipse 52% 62% at 30% 60%, rgba(200,215,255,0.14), transparent 72%),
+            radial-gradient(ellipse 46% 56% at 56% 42%, rgba(200,215,255,0.11), transparent 72%),
+            radial-gradient(ellipse 42% 52% at 76% 64%, rgba(200,215,255,0.10), transparent 72%);
+        will-change: transform;
+    }
+    .cloud-1 { width: 38vw; height: 9vh;  top: 14vh; animation: cloudDrift 80s linear infinite;  animation-delay: -12s; }
+    .cloud-2 { width: 28vw; height: 7vh;  top: 25vh; opacity: 0.7;  animation: cloudDrift 100s linear infinite; animation-delay: -55s; }
+    .cloud-3 { width: 46vw; height: 10vh; top: 6vh;  opacity: 0.55; animation: cloudDrift 130s linear infinite; animation-delay: -35s; }
+    @keyframes cloudDrift {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-165vw); }
+    }
+    .tree-shadow {
+        position: absolute; bottom: 0; left: 50%;
+        transform: translateX(-50%);
+        width: 100%; height: 55vh;
+        z-index: 2; pointer-events: none; opacity: 0.08;
+    }
+    .family-shadow {
+        position: absolute;
+        bottom: calc(6vh + env(safe-area-inset-bottom));
+        left: 50%; transform: translateX(-50%);
+        width: min(430px, 78vw);
+        height: auto; z-index: 3; pointer-events: none;
+        color: #01030e;
+        filter: drop-shadow(0 0 16px rgba(255, 195, 115, 0.20));
+    }
+    .lantern {
+        position: absolute;
+        top: env(safe-area-inset-top);
+        z-index: 3; pointer-events: none;
+        transform-origin: top center;
+    }
+    .lantern-left  { left: 4vw;  animation: lanternSwing 5.5s ease-in-out infinite; }
+    .lantern-right { right: 4vw; animation: lanternSwing 5.5s ease-in-out infinite; animation-delay: -2.75s; }
+    @keyframes lanternSwing {
+        0%, 100% { transform: rotate(-4deg); }
+        50%      { transform: rotate(4deg); }
+    }
+    .lantern-rope {
+        width: 2px; height: 6vh; margin: 0 auto;
+        background: linear-gradient(to bottom, rgba(212,175,55,0.10), rgba(212,175,55,0.80));
+    }
+    .lantern-body {
+        position: relative;
+        width: 38px; height: 46px;
+        border-radius: 50%;
+        background:
+            linear-gradient(#e8c86a, #d4af37) top center / 55% 4px no-repeat,
+            linear-gradient(#d4af37, #b8912a) bottom center / 55% 4px no-repeat,
+            radial-gradient(circle at 34% 28%, #ff9f72, #e63946 52%, #8f1a20 100%);
+        box-shadow:
+            0 0 22px rgba(255, 90, 60, 0.55),
+            0 0 55px rgba(255, 70, 40, 0.25),
+            inset -5px -5px 12px rgba(80, 0, 0, 0.45),
+            inset  3px  3px  8px rgba(255,180,150,0.35);
+        animation: lanternGlow 3s ease-in-out infinite;
+    }
+    @keyframes lanternGlow {
+        0%, 100% { filter: brightness(1); }
+        50%      { filter: brightness(1.16); }
+    }
+    .lantern-body::before {
+        content: '';
+        position: absolute; inset: 4px 11px;
+        border-left: 1px solid rgba(255, 220, 180, 0.28);
+        border-right: 1px solid rgba(255, 220, 180, 0.28);
+        border-radius: 50%;
+    }
+    .lantern-body::after {
+        content: '';
+        position: absolute;
+        left: 50%; top: 100%;
+        width: 3px; height: 18px;
+        transform: translateX(-50%);
+        border-radius: 2px;
+        background: linear-gradient(to bottom, #e8c86a, rgba(212, 175, 55, 0.08));
+    }
+    .footer {
+        position: absolute;
+        bottom: calc(2vh + env(safe-area-inset-bottom));
+        width: 100%; text-align: center;
+        color: rgba(255, 240, 200, 0.55);
+        font-size: 12px; letter-spacing: 3px;
+        z-index: 10;
+        text-shadow: 0 0 12px rgba(255, 220, 140, 0.35);
+        padding: 0 16px;
+    }
+    .footer::before {
+        content: '';
+        display: block;
+        width: 46vw; max-width: 260px;
+        height: 1px; margin: 0 auto 10px;
+        background: linear-gradient(to right,
+            transparent, rgba(212, 175, 55, 0.45) 50%, transparent);
+    }
+    #particle-canvas {
+        position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 5; pointer-events: none;
+    }
+
+    /* ==================== 小屏适配 ==================== */
+    @media (max-width: 640px) {
+        .lantern { display: none; }
+
+        /* 小屏把月亮缩小、贴到右上角，给问候语让出空间 */
+        .moon {
+            width: min(18vw, 80px);
+            height: min(18vw, 80px);
+            top: max(3vh, env(safe-area-inset-top));
+            right: 5vw;
+        }
+        .greeting {
+            top: calc(4.5vh + env(safe-area-inset-top));
+        }
+    }
+
+    /* 超窄屏：进一步收缩 */
+    @media (max-width: 380px) {
+        .greeting-text {
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+        .greeting-line {
+            width: 14px;
+        }
+        .moon {
+            width: min(16vw, 64px);
+            height: min(16vw, 64px);
+        }
+    }
+
+    @media (max-height: 500px) and (orientation: landscape) {
+        .moon { width: min(14vh, 90px); height: min(14vh, 90px); top: 4vh; }
+        .family-shadow { width: min(320px, 55vw); bottom: 3vh; }
+        .lantern { display: none; }
+        .greeting {
+            top: calc(2vh + env(safe-area-inset-top));
+            left: 4vw;
+            transform: none;
+        }
+    }
+</style>
+</head>
+<body>
+    <canvas id="star-canvas"></canvas>
+
+    <div class="moon"></div>
+
+    <!-- 顶部签名问候语 -->
+    <div class="greeting" aria-label="Kaner祝您及家人">
+        <span class="greeting-line"></span>
+        <span class="greeting-text">Kaner祝您及家人</span>
+        <span class="greeting-line"></span>
+    </div>
+
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <canvas class="tree-shadow" id="tree-canvas"></canvas>
+
+    <svg class="family-shadow" viewBox="0 0 400 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+        <g fill="currentColor">
+            <circle cx="120" cy="46" r="13"/>
+            <path d="M120 59 Q108 62 104 80 Q102 95 104 110 L136 110 Q138 95 136 80 Q132 62 120 59 Z"/>
+            <circle cx="280" cy="48" r="12"/>
+            <path d="M280 60 Q269 63 266 80 Q264 95 266 110 L294 110 Q296 95 294 80 Q291 63 280 60 Z"/>
+            <circle cx="200" cy="66" r="9"/>
+            <path d="M200 75 Q192 77 190 90 Q189 100 190 110 L210 110 Q211 100 210 90 Q208 77 200 75 Z"/>
+            <rect x="168" y="86" width="64" height="5" rx="2.5"/>
+            <rect x="175" y="91" width="3" height="19"/>
+            <rect x="222" y="91" width="3" height="19"/>
+            <circle cx="184" cy="83" r="3.5"/>
+            <circle cx="200" cy="83" r="3.5"/>
+            <circle cx="216" cy="83" r="3.5"/>
+            <ellipse cx="325" cy="102" rx="11" ry="7"/>
+            <circle cx="335" cy="96" r="5"/>
+            <ellipse cx="333" cy="88" rx="2" ry="5.5"/>
+            <ellipse cx="338" cy="88" rx="2" ry="5.5"/>
+        </g>
+    </svg>
+
+    <div class="lantern lantern-left">
+        <div class="lantern-rope"></div>
+        <div class="lantern-body"></div>
+    </div>
+    <div class="lantern lantern-right">
+        <div class="lantern-rope"></div>
+        <div class="lantern-body"></div>
+    </div>
+
+    <canvas id="particle-canvas"></canvas>
+    <div class="footer">但愿人长久 · 千里共婵娟</div>
+
+<script>
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const treeCanvas = document.getElementById('tree-canvas');
+    const treeCtx = treeCanvas.getContext('2d');
+    const starCanvas = document.getElementById('star-canvas');
+    const starCtx = starCanvas.getContext('2d', { alpha: true });
+
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const IS_LOW_END = IS_MOBILE && (navigator.hardwareConcurrency || 4) <= 4;
+
+    let width, height;
+
+    const WORD_CHARS = ['中', '秋', '快', '乐'];
+    const WORD_STRING = WORD_CHARS.join('');
+
+    let particles = [];
+    let ambientParticles = [];
+    let residualParticles = [];
+    let stars = [];
+    let skyLanterns = [];
+
+    const FORM_MAX_FRAMES = IS_LOW_END ? 700 : 800;
+    const HOLD_FRAMES     = IS_LOW_END ? 220 : 260;
+    const AMBIENT_MAX     = IS_LOW_END ? 260 : 500;
+    const STAR_DENSITY    = IS_LOW_END ? 16000 : 9000;
+    const LANTERN_COUNT   = IS_LOW_END ? 4 : 6;
+
+    let animationState = 'forming';
+    let stateTimer = 0;
+    let restartScheduled = false;
+
+    let wordCoords = [];
+
+    /* ---------------- 初始化 ---------------- */
+    function initCanvas() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+
+        setupCanvas(canvas, ctx, width, height, DPR);
+        setupCanvas(starCanvas, starCtx, width, height, DPR);
+        setupCanvas(treeCanvas, treeCtx, width, height, Math.min(DPR, 1.5));
+
+        drawTreeShadow();
+        preExtractWord();
+        initStars();
+        initSkyLanterns(LANTERN_COUNT);
+    }
+
+    function setupCanvas(cv, c, w, h, dpr) {
+        cv.width = Math.round(w * dpr);
+        cv.height = Math.round(h * dpr);
+        cv.style.width = w + 'px';
+        cv.style.height = h + 'px';
+        c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    let resizeTimer = null;
+    function handleResize() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            initCanvas();
+            particles.length = 0;
+            residualParticles.length = 0;
+            ambientParticles.length = 0;
+            createAmbientParticles(Math.floor(AMBIENT_MAX * 0.15));
+            particles = createWordParticles();
+            animationState = 'forming';
+            stateTimer = 0;
+            restartScheduled = false;
+        }, 200);
+    }
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    /* ---------------- 星空 ---------------- */
+    function initStars() {
+        stars = [];
+        const count = Math.min(
+            Math.floor((width * height) / STAR_DENSITY),
+            IS_LOW_END ? 120 : 220
+        );
+        for (let i = 0; i < count; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height * 0.9,
+                r: Math.random() * 1.1 + 0.25,
+                phase: Math.random() * Math.PI * 2,
+                speed: Math.random() * 0.0012 + 0.0005,
+                baseAlpha: Math.random() * 0.55 + 0.25
+            });
+        }
+    }
+
+    function drawStars() {
+        starCtx.clearRect(0, 0, width, height);
+        const t = performance.now();
+        for (let i = 0; i < stars.length; i++) {
+            const s = stars[i];
+            const alpha = s.baseAlpha * (0.45 + 0.55 * Math.sin(t * s.speed + s.phase));
+            if (alpha <= 0.02) continue;
+            starCtx.beginPath();
+            starCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            starCtx.fillStyle = `rgba(255, 252, 235, ${alpha})`;
+            starCtx.fill();
+        }
+    }
+
+    /* ---------------- 孔明灯 ---------------- */
+    class SkyLantern {
+        constructor(initial) { this.reset(initial); }
+        reset(initial) {
+            this.x = Math.random() * width;
+            this.y = initial ? Math.random() * height : height + 40;
+            this.speed = Math.random() * 0.35 + 0.20;
+            this.drift = (Math.random() - 0.5) * 0.12;
+            this.scale = Math.random() * 0.45 + 0.55;
+            this.alpha = Math.random() * 0.35 + 0.40;
+            this.wobble = Math.random() * Math.PI * 2;
+            this.flicker = Math.random() * Math.PI * 2;
+        }
+        update() {
+            this.wobble += 0.012;
+            this.flicker += 0.06;
+            this.y -= this.speed;
+            this.x += this.drift + Math.sin(this.wobble) * 0.2;
+            if (this.y < -70) this.reset(false);
+        }
+        draw() {
+            const s = this.scale;
+            const a = this.alpha;
+            const glow = 0.82 + Math.sin(this.flicker) * 0.18;
+            ctx.save();
+            ctx.translate(this.x, this.y);
+
+            const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, 30 * s);
+            halo.addColorStop(0,   `rgba(255, 186, 100, ${0.30 * a * glow})`);
+            halo.addColorStop(0.5, `rgba(255, 150, 70,  ${0.12 * a * glow})`);
+            halo.addColorStop(1,   'rgba(255, 130, 60, 0)');
+            ctx.fillStyle = halo;
+            ctx.beginPath();
+            ctx.arc(0, 0, 30 * s, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(-4.5 * s, -9 * s);
+            ctx.quadraticCurveTo(0, -11.5 * s, 4.5 * s, -9 * s);
+            ctx.lineTo(6.5 * s, 6 * s);
+            ctx.quadraticCurveTo(0, 9.5 * s, -6.5 * s, 6 * s);
+            ctx.closePath();
+
+            const bodyGrad = ctx.createLinearGradient(0, -10 * s, 0, 9 * s);
+            bodyGrad.addColorStop(0,   `rgba(255, 214, 138, ${0.85 * a})`);
+            bodyGrad.addColorStop(0.6, `rgba(255, 162, 82,  ${0.90 * a})`);
+            bodyGrad.addColorStop(1,   `rgba(228, 118, 48,  ${0.90 * a})`);
+            ctx.fillStyle = bodyGrad;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(0, 1.5 * s, 3.2 * s, 3.6 * s, 0, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 245, 190, ${0.90 * a * glow})`;
+            ctx.fill();
+
+            ctx.restore();
+        }
+    }
+
+    function initSkyLanterns(count) {
+        skyLanterns = [];
+        for (let i = 0; i < count; i++) {
+            skyLanterns.push(new SkyLantern(true));
+        }
+    }
+
+    /* ---------------- 提取文字坐标 ---------------- */
+    function preExtractWord() {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const isLandscape = width > height;
+
+        if (isLandscape) {
+            const fontSize = Math.min(width * 0.80 / 4, height * 0.30, 160);
+            ctx.font = `bold ${fontSize}px "STKaiti", "KaiTi", "Microsoft YaHei", serif`;
+            ctx.fillText(WORD_STRING, width / 2, height * 0.46);
+        } else {
+            const fontSize = Math.min(width * 0.62, height * 0.75 / 4.6, 140);
+            ctx.font = `bold ${fontSize}px "STKaiti", "KaiTi", "Microsoft YaHei", serif`;
+            const lineHeight = fontSize * 1.18;
+            const centerY = height * 0.46;
+            const startY = centerY - lineHeight * 1.5;
+            for (let i = 0; i < WORD_CHARS.length; i++) {
+                ctx.fillText(WORD_CHARS[i], width / 2, startY + i * lineHeight);
+            }
+        }
+
+        const pw = Math.round(width * DPR);
+        const ph = Math.round(height * DPR);
+        const data = ctx.getImageData(0, 0, pw, ph).data;
+        wordCoords = [];
+
+        const step = IS_LOW_END ? 5 : 3;
+        const dprStep = Math.max(1, Math.round(step * DPR));
+
+        for (let y = 0; y < ph; y += dprStep) {
+            const rowOffset = y * pw;
+            for (let x = 0; x < pw; x += dprStep) {
+                if (data[(rowOffset + x) * 4 + 3] > 128) {
+                    wordCoords.push({ x: x / DPR, y: y / DPR });
+                }
+            }
+        }
+        ctx.clearRect(0, 0, width, height);
+    }
+
+    /* ---------------- 树影 ---------------- */
+    function drawTreeShadow() {
+        const W = width;
+        const H = height * 0.55;
+        treeCtx.clearRect(0, 0, W, H);
+        treeCtx.fillStyle = '#1a3a1a';
+
+        const trunkX = W / 2;
+        const trunkWidth = W * 0.04;
+        const trunkHeight = H * 0.85;
+
+        treeCtx.fillRect(trunkX - trunkWidth / 2, H - trunkHeight, trunkWidth, trunkHeight);
+
+        const branches = [
+            { x: trunkX, y: H - trunkHeight * 0.85, angle: -0.6, len: W * 0.18 },
+            { x: trunkX, y: H - trunkHeight * 0.75, angle:  0.5, len: W * 0.15 },
+            { x: trunkX, y: H - trunkHeight * 0.60, angle: -0.4, len: W * 0.12 },
+            { x: trunkX, y: H - trunkHeight * 0.50, angle:  0.6, len: W * 0.14 },
+        ];
+
+        branches.forEach(b => {
+            treeCtx.save();
+            treeCtx.translate(b.x, b.y);
+            treeCtx.rotate(b.angle);
+            treeCtx.fillRect(0, -3, b.len, 6);
+            treeCtx.fillRect(b.len * 0.5, -2, b.len * 0.4, 4);
+            treeCtx.restore();
+        });
+
+        treeCtx.globalAlpha = 0.3;
+        treeCtx.beginPath();
+        treeCtx.arc(trunkX, H - trunkHeight * 0.9, W * 0.22, 0, Math.PI * 2);
+        treeCtx.fill();
+        treeCtx.globalAlpha = 1;
+    }
+
+    /* ---------------- 粒子类 ---------------- */
+    class Particle {
+        constructor(targetX, targetY, delay, isAmbient, isResidual) {
+            this.delay = delay || 0;
+            this.isAmbient = !!isAmbient;
+            this.isResidual = !!isResidual;
+
+            this.wobbleOffset = Math.random() * Math.PI * 2;
+            this.wobbleSpeed  = Math.random() * 0.025 + 0.015;
+
+            const g = Math.floor(Math.random() * 60 + 180);
+            this.color = `rgba(255, ${g}, 0, `;
+
+            if (this.isResidual) {
+                this.x = targetX;
+                this.y = targetY;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.hasArrived = true;
+                this.isLeaving = false;
+                this.alpha = Math.random() * 0.25 + 0.15;
+                this.size = Math.random() * 1.5 + 0.8;
+                this.wobbleSpeed = Math.random() * 0.01 + 0.005;
+                this.wobbleAmount = 0;
+                this.driftX = 0;
+                this.speedY = 0;
+
+            } else if (this.isAmbient) {
+                this.x = Math.random() * width;
+                this.y = Math.random() < 0.3
+                    ? Math.random() * height
+                    : -Math.random() * height * 0.3 - 20;
+                this.hasArrived = true;
+                this.isLeaving = true;
+                this.speedY = Math.random() * 1.5 + 1.0;
+                this.driftX = (Math.random() - 0.5) * 0.5;
+                this.wobbleAmount = Math.random() * 1.5 + 0.5;
+                this.size = Math.random() * 2.5 + 1.5;
+                this.alpha = Math.random() * 0.4 + 0.55;
+
+            } else {
+                this.x = targetX + (Math.random() - 0.5) * Math.min(width * 0.6, 500);
+                this.y = -30 - Math.random() * height * 0.35;
+
+                this.targetX = targetX + (Math.random() - 0.5) * 3;
+                this.targetY = targetY + (Math.random() - 0.5) * 3;
+
+                this.hasArrived = false;
+                this.isLeaving = false;
+                this.abandoned = false;
+
+                this.speedY = Math.random() * 1.2 + 1.0;
+                this.driftX = (Math.random() - 0.5) * 0.5;
+                this.wobbleAmount = Math.random() * 1.5 + 0.5;
+
+                this.size = Math.random() * 2.2 + 1.2;
+                this.alpha = Math.random() * 0.3 + 0.5;
+
+                this.captureRX = 130 + Math.random() * 60;
+                this.captureRY = 180 + Math.random() * 80;
+            }
+        }
+
+        update() {
+            if (this.delay > 0) { this.delay--; return; }
+
+            if (this.isResidual) {
+                this.alpha *= 0.975;
+                this.wobbleOffset += this.wobbleSpeed;
+                this.x = this.targetX + Math.sin(this.wobbleOffset) * 0.5;
+                this.y = this.targetY + Math.cos(this.wobbleOffset * 0.7) * 0.3;
+
+            } else if (this.isAmbient) {
+                this.wobbleOffset += this.wobbleSpeed;
+                this.x += this.driftX + Math.sin(this.wobbleOffset) * this.wobbleAmount;
+                this.y += this.speedY;
+                this.alpha *= 0.997;
+
+            } else if (!this.hasArrived && !this.isLeaving && !this.abandoned) {
+                this.wobbleOffset += this.wobbleSpeed;
+                this.x += this.driftX + Math.sin(this.wobbleOffset) * this.wobbleAmount;
+                this.y += this.speedY;
+
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                const nx = dx / this.captureRX;
+                const ny = dy / this.captureRY;
+                const distN = Math.sqrt(nx * nx + ny * ny);
+
+                if (distN < 1) {
+                    const t = 1 - distN;
+                    const strength = t * t * t * 0.35;
+
+                    this.x += dx * strength;
+                    this.y += dy * strength;
+                    this.speedY *= (1 - t * 0.05);
+
+                    if (Math.abs(dx) < 4 && Math.abs(dy) < 4) {
+                        this.hasArrived = true;
+                        this.x = this.targetX;
+                        this.y = this.targetY;
+                        this.alpha = 1;
+                    }
+                } else if (this.y > this.targetY + this.captureRY) {
+                    this.abandoned = true;
+                    this.isAmbient = true;
+                }
+
+            } else if (this.hasArrived && !this.isLeaving) {
+                const t = performance.now();
+                this.x = this.targetX + Math.sin(t * 0.003 + this.wobbleOffset) * 1.0;
+                this.y = this.targetY + Math.cos(t * 0.004 + this.wobbleOffset) * 0.6;
+                this.alpha = 0.9 + Math.sin(t * 0.005 + this.wobbleOffset) * 0.1;
+
+            } else {
+                this.wobbleOffset += this.wobbleSpeed * 1.2;
+                this.x += this.driftX + Math.sin(this.wobbleOffset) * this.wobbleAmount * 1.5;
+                this.y += this.speedY * 0.7;
+                this.alpha *= 0.985;
+                this.size *= 0.995;
+            }
+
+            if (this.y > height + 30) this.alpha = 0;
+        }
+
+        draw() {
+            if (this.alpha < 0.015 || this.size < 0.3) return;
+
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.wobbleOffset * 0.5);
+
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.size, this.size * 0.55, 0, 0, Math.PI * 2);
+            ctx.fillStyle = this.color + this.alpha + ')';
+            ctx.fill();
+
+            if (this.hasArrived && !this.isLeaving && !this.isAmbient && !this.isResidual) {
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size * 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 220, 50, ${this.alpha * 0.15})`;
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+    }
+
+    /* ---------------- 粒子工厂 ---------------- */
+    function createWordParticles() {
+        const out = [];
+        if (wordCoords.length === 0) return out;
+
+        const shuffled = [...wordCoords].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach(coord => {
+            const delay = Math.random() * 20;
+            out.push(new Particle(coord.x, coord.y, delay, false, false));
+        });
+
+        return out;
+    }
+
+    function createAmbientParticles(count) {
+        for (let i = 0; i < count; i++) {
+            ambientParticles.push(new Particle(0, 0, 0, true, false));
+        }
+    }
+
+    function createResidualParticles() {
+        const count = Math.min(
+            Math.floor(wordCoords.length * (Math.random() * 0.07 + 0.05)),
+            200
+        );
+        const shuffled = [...wordCoords].sort(() => Math.random() - 0.5);
+        shuffled.slice(0, count).forEach(coord => {
+            residualParticles.push(new Particle(coord.x, coord.y, 0, false, true));
+        });
+    }
+
+    /* ---------------- 溶解 ---------------- */
+    function dissolveCurrentWord() {
+        createResidualParticles();
+
+        particles.forEach(p => {
+            if (p.isLeaving) return;
+            if (!p.hasArrived) {
+                p.alpha = 0;
+                return;
+            }
+
+            p.isLeaving = true;
+            p.driftX = (Math.random() - 0.5) * 1.2;
+            p.wobbleAmount = Math.random() * 1.5 + 0.8;
+            p.speedY = Math.random() * 1.2 + 0.6;
+        });
+    }
+
+    function restartWord() {
+        particles.length = 0;
+        particles = createWordParticles();
+        animationState = 'forming';
+        stateTimer = 0;
+        restartScheduled = false;
+    }
+
+    /* ---------------- 主循环 ---------------- */
+    let lastFrame = 0;
+    const MIN_FRAME_INTERVAL = IS_LOW_END ? 1000 / 30 : 0;
+
+    function animate(now) {
+        requestAnimationFrame(animate);
+
+        if (MIN_FRAME_INTERVAL > 0) {
+            if (now - lastFrame < MIN_FRAME_INTERVAL) return;
+            lastFrame = now;
+        }
+
+        if (document.hidden) return;
+
+        ctx.clearRect(0, 0, width, height);
+        stateTimer++;
+
+        drawStars();
+        for (let i = 0; i < skyLanterns.length; i++) {
+            skyLanterns[i].update();
+            skyLanterns[i].draw();
+        }
+
+        if (ambientParticles.length < AMBIENT_MAX && Math.random() < 0.35) {
+            createAmbientParticles(1 + (Math.random() < 0.4 ? 1 : 0));
+        }
+
+        if (animationState === 'forming') {
+            if (stateTimer % 15 === 0 || stateTimer > FORM_MAX_FRAMES) {
+                let settled = 0;
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    if (p.hasArrived || p.abandoned || p.alpha < 0.05) settled++;
+                }
+                const total = particles.length;
+                const allSettled = total > 0 && settled / total > 0.92;
+
+                if (allSettled || stateTimer > FORM_MAX_FRAMES) {
+                    animationState = 'holding';
+                    stateTimer = 0;
+                }
+            }
+
+        } else if (animationState === 'holding') {
+            if (stateTimer > HOLD_FRAMES) {
+                animationState = 'dissolving';
+                stateTimer = 0;
+                dissolveCurrentWord();
+            }
+
+        } else if (animationState === 'dissolving') {
+            if (!restartScheduled && stateTimer > 45 &&
+                residualParticles.every(p => p.alpha < 0.06)) {
+                restartScheduled = true;
+                setTimeout(restartWord, 500);
+            }
+        }
+
+        for (let i = 0; i < particles.length; i++) { particles[i].update(); particles[i].draw(); }
+        for (let i = 0; i < ambientParticles.length; i++) { ambientParticles[i].update(); ambientParticles[i].draw(); }
+        for (let i = 0; i < residualParticles.length; i++) { residualParticles[i].update(); residualParticles[i].draw(); }
+
+        particles = particles.filter(p => p.alpha > 0.01);
+        ambientParticles = ambientParticles.filter(p => p.alpha > 0.01);
+        residualParticles = residualParticles.filter(p => p.alpha > 0.01);
+    }
+
+    /* ---------------- 交互 ---------------- */
+    let touchBoostTimer = null;
+    function onTap() {
+        if (touchBoostTimer) return;
+        touchBoostTimer = setTimeout(() => { touchBoostTimer = null; }, 3000);
+        createAmbientParticles(12);
+    }
+    window.addEventListener('touchstart', onTap, { passive: true });
+    window.addEventListener('mousedown', onTap);
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) lastFrame = 0;
+    });
+
+    /* ---------------- 启动 ---------------- */
+    window.addEventListener('load', () => {
+        initCanvas();
+        createAmbientParticles(80);
+        particles = createWordParticles();
+        animationState = 'forming';
+        stateTimer = 0;
+        requestAnimationFrame(animate);
+    });
+</script>
+</body>
+</html>
