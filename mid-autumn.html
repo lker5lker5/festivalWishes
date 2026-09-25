@@ -246,7 +246,11 @@
             right: 5vw;
         }
         .greeting {
-            top: calc(4.5vh + env(safe-area-inset-top));
+            /* top: calc(4.5vh + env(safe-area-inset-top)); */
+            top: max(3vh, env(safe-area-inset-top));
+            left: 3vw;
+            transform: none;
+            gap: 5px;
         }
     }
 
