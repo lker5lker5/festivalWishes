@@ -329,7 +329,7 @@
     </div>
 
     <canvas id="particle-canvas"></canvas>
-    <div class="footer">但愿人长久 · 千里共婵娟</div>
+    <div class="footer" id="footer-text">但愿人长久 · 千里共婵娟</div>
 
 <script>
     const canvas = document.getElementById('particle-canvas');
@@ -345,8 +345,16 @@
 
     let width, height;
 
-    const WORD_CHARS = ['中', '秋', '快', '乐'];
-    const WORD_STRING = WORD_CHARS.join('');
+    //const WORD_CHARS = ['中', '秋', '快', '乐'];
+    //const WORD_STRING = WORD_CHARS.join('');
+    const WORD_GROUPS = [
+        ['中', '秋', '快', '乐'],
+        ['阖', '家', '团', '圆'],
+        ['幸', '福', '安', '康']
+    ];
+    let groupIndex = 0;
+    let WORD_CHARS = WORD_GROUPS[0];
+    let WORD_STRING = WORD_CHARS.join('');
 
     let particles = [];
     let ambientParticles = [];
@@ -784,11 +792,26 @@
     }
 
     function restartWord() {
+        // 切换下一组词
+        groupIndex = (groupIndex + 1) % WORD_GROUPS.length;
+        WORD_CHARS = WORD_GROUPS[groupIndex];
+        WORD_STRING = WORD_CHARS.join('');
+
+        // 用新词组重新提取坐标
+        preExtractWord();
+
         particles.length = 0;
         particles = createWordParticles();
         animationState = 'forming';
         stateTimer = 0;
         restartScheduled = false;
+
+        const FOOTER_TEXTS = [
+            '但愿人长久 · 千里共婵娟',
+            '海上生明月 · 天涯共此时',
+            '花好月圆夜 · 阖家共安康'
+        ];
+        document.getElementById('footer-text').textContent = FOOTER_TEXTS[groupIndex];
     }
 
     /* ---------------- 主循环 ---------------- */
